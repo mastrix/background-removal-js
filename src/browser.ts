@@ -84,8 +84,8 @@ async function removeBackground(
   return await utils.imageEncode(imageData);
 }
 
-class BackgroundRemoval {
-  controller: AbortController | null = null;
+const InitBackgroundRemoval = class BackgroundRemoval {
+  controller: any = null;
   imglyProcessor: configData | null = null;
   config: Config | null = null;
   loaded: boolean = false;
@@ -131,4 +131,4 @@ class BackgroundRemoval {
   }
 }
 
-export default BackgroundRemoval;
+export default InitBackgroundRemoval;
