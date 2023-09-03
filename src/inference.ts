@@ -18,10 +18,11 @@ export async function runInference(
   const src_height = imageData.height;
 
   const dims = [1, 3, resolution, resolution];
+
+  if (!imports || !session) return imageData;
+
   let tensorImage = await imageDataResize(imageData, resolution, resolution);
   const inputTensorData = imageDataToFloat32Array(tensorImage);
-  
-  if (!imports || !session) tensorImage;
 
   const predictionsDict = await imports.runSession(
     session,
