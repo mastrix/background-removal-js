@@ -27,12 +27,6 @@ function createOnnxRuntime(config: any): Imports {
       ort.env.wasm.simd = capabilities.simd;
       ort.env.wasm.proxy = config.proxyToWorker;
       ort.env.wasm.wasmPaths = {
-        // 'ort-wasm-simd-threaded.jsep.wasm':  URL.createObjectURL(
-        //   await Bundle.load('ort-wasm-simd-threaded.jsep.wasm', config)
-        // ),
-        // 'ort-wasm-simd.jsep.wasm': URL.createObjectURL(
-        //   await Bundle.load('ort-wasm-simd.jsep.wasm', config)
-        // ),
         'ort-wasm-simd-threaded.wasm': URL.createObjectURL(
           await Bundle.load('ort-wasm-simd-threaded.wasm', config)
         ),
@@ -67,8 +61,6 @@ function createOnnxRuntime(config: any): Imports {
         );
       });
 
-      // URL.revokeObjectURL(ort.env.wasm.wasmPaths['ort-wasm-simd-threaded.jsep.wasm']!);
-      // URL.revokeObjectURL(ort.env.wasm.wasmPaths['ort-wasm-simd.jsep.wasm']!);
       URL.revokeObjectURL(
         ort.env.wasm.wasmPaths['ort-wasm-simd-threaded.wasm']!
       );

@@ -24,7 +24,6 @@
     "email": "support@img.ly"
   },
   "main": "./dist/browser.js",
-  "module": "./dist/browser.mjs",
   "browser": "./dist/browser.js",
   "homepage": "https://img.ly/showcases/cesdk/web/background-removal/web",
   "types": "./dist/browser.d.ts",
@@ -39,7 +38,6 @@
     "test": "true",
     "build": "npm run clean; npx webpack --mode production",
     "watch": "npm run clean; npx webpack --watch --mode development",
-    "publish:public": "npm run build && npm publish --access public",
     "lint": "npx prettier --write ."
   },
   "devDependencies": {

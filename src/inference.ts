@@ -1,6 +1,5 @@
-import { imageDataResize, imageDataToFloat32Array } from './utils';
+import { imageDataResize, imageDataToFloat32Array, calculateProportionalSize } from './utils';
 import { Imports } from './tensor';
-import { calculateProportionalSize } from './utils';
 import { Config } from './schema';
 
 export async function runInference(

@@ -19,7 +19,7 @@ const ConfigSchema = z
       .default(true)
       .describe('Whether to proxy inference to a web worker.'),
     fetchArgs: z
-      .object({})
+      .optional(z.object({}))
       .default({})
       .describe('Arguments to pass to fetch when loading the model.'),
     progress: z

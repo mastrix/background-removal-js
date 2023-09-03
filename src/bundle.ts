@@ -7,11 +7,12 @@ type Entry = {
   size: number;
   mime: string;
 };
+
 const bundle: Map<string, Entry> = new Map([
   [
     'small',
     {
-      url: require('../bundle/models/7001d60734fdc112dd9c062635fb59cd401fb82a9d4213134bce4dbd655c803a.onnx'),
+      url: require('../bundle/models/a620c8c752bdf5c69d98.onnx'),
       size: 44342436,
       mime: 'application/octet-stream'
     }
@@ -19,33 +20,9 @@ const bundle: Map<string, Entry> = new Map([
   [
     'medium',
     {
-      url: require('../bundle/models/b6e8497ba978a6f5fbb647e419d2696cd80df5a23cb6a8ea532021911bd76acb.onnx'),
+      url: require('../bundle/models/2ebb460f4adfe0ebf34d.onnx'),
       size: 88188479,
       mime: 'application/octet-stream'
-    }
-  ],
-  // [
-  //   'large',
-  //   {
-  //     url: require('../bundle/models/17b7466d93bb60b0e88affa2b0e8b3eee309c7de183d394ce4b956339ebd95e6.onnx'),
-  //     size: 176173887,
-  //     mime: 'application/octet-stream'
-  //   }
-  // ],
-  [
-    'ort-wasm-simd-threaded.jsep.wasm',
-    {
-      url: require('../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm'),
-      size: 18215132,
-      mime: 'application/wasm'
-    }
-  ],
-  [
-    'ort-wasm-simd.jsep.wasm',
-    {
-      url: require('../node_modules/onnxruntime-web/dist/ort-wasm-simd.jsep.wasm'),
-      size: 16836274,
-      mime: 'application/wasm'
     }
   ],
   [
@@ -89,7 +66,23 @@ async function load(key: string, config: Config) {
     url = new URL(url.split('/').pop()!, config.publicPath).toString();
   }
 
-  const response = await fetch(url, config.fetchArgs);
+  const userConfig = config.fetchArgs ?? {};
+
+  const defaultFetchOptions = {
+    headers: {
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'max-age=3600',
+      'If-Modified-Since': new Date().toUTCString()
+    }
+  };
+
+  console.log('config', { config });
+  console.log({ url, publicPath: config.publicPath, entry: entry.url });
+
+  const response = await fetch(url, {
+    ...userConfig,
+    ...defaultFetchOptions
+  });
 
   const chunks = config.progress
     ? await fetchChunked(response, entry, config, key)

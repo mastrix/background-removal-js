@@ -1,5 +1,4 @@
 // Exports
-export default removeBackground;
 export type { ImageSource, Config };
 
 // Imports
@@ -10,7 +9,7 @@ import * as utils from './utils';
 import * as Bundle from './bundle';
 import { Imports } from './tensor';
 
-import { memoize } from 'lodash';
+import memoize from 'lodash/memoize';
 
 type ImageSource = ImageData | ArrayBuffer | Uint8Array | Blob | URL | string;
 
@@ -32,15 +31,35 @@ async function _init(config?: Config) {
 
 const init = memoize(_init, (config) => JSON.stringify(config));
 
+interface configData {
+  config: Config | undefined;
+  imports: Imports;
+  session: any;
+}
+
 async function removeBackground(
   image: ImageSource,
-  configuration?: Config
-): Promise<Blob> {
-  const { config, imports, session } = await init(configuration);
+  configuration: configData,
+): Promise<Blob | object> {
+  const {
+    config = {
+      debug: false,
+      proxyToWorker: false,
+      model: 'medium',
+      fetchArgs: {},
+      progress: undefined,
+      publicPath: undefined
+    },
+    imports,
+    session
+  } = configuration;
 
-  if (config.debug) {
+  console.log('imports', imports);
+  console.log('session', session);
+
+  if (config?.debug) {
     config.progress =
-      config.progress ??
+      config?.progress ??
       ((key, current, total) => {
         console.debug(`Downloading ${key}: ${current} of ${total}`);
       });
@@ -64,3 +83,52 @@ async function removeBackground(
 
   return await utils.imageEncode(imageData);
 }
+
+class BackgroundRemoval {
+  controller: AbortController | null = null;
+  imglyProcessor: configData | null = null;
+  config: Config | null = null;
+  loaded: boolean = false;
+
+  constructor(config: Config | null) {
+    this.config = config;
+    this.controller = null || new AbortController();
+    this.imglyProcessor = null;
+    this.loaded = false;
+  }
+
+  private async loadModel(): Promise<any> {
+    if (this.config?.debug) {
+      console.debug('Preloading model...');
+    }
+    this.loaded = true;
+    this.imglyProcessor = await init(this.config || undefined);
+    return this.imglyProcessor;
+  }
+
+  async warmpUp() {
+    await this.loadModel();
+    return;
+  };
+
+  async removeBackground(image: string): Promise<Blob | object | void> {
+    if (!this.loaded) {
+      const imglyProcessor = await this.loadModel();
+      this.controller = new AbortController();
+      const { signal } = this.controller;
+      console.log('signal', signal);
+      const result = await removeBackground(image, imglyProcessor);
+      this.controller = null;
+      return result;
+    }
+  }
+
+  cancelBackgroundRemoval(): void {
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
+}
+
+export default BackgroundRemoval;

@@ -21,15 +21,15 @@ async function imageEncode(
   quality: number = 0.8,
   type: string = 'image/png'
 ): Promise<Blob> {
-  var canvas = new OffscreenCanvas(imageData.width, imageData.height);
-  var ctx = canvas.getContext('2d')!;
+  const canvas = new OffscreenCanvas(imageData.width, imageData.height);
+  const ctx = canvas.getContext('2d')!;
   ctx.putImageData(imageData, 0, 0);
   return canvas.convertToBlob({ quality, type });
 }
 
 function imageBitmapToImageData(imageBitmap: ImageBitmap): ImageData {
-  var canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-  var ctx = canvas.getContext('2d')!;
+  const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
+  const ctx = canvas.getContext('2d')!;
 
   // Draw the ImageBitmap onto the canvas
   ctx.drawImage(imageBitmap, 0, 0);
@@ -57,7 +57,7 @@ function imageDataToFloat32Array(
   mean: number[] = [128, 128, 128],
   std: number[] = [256, 256, 256]
 ): Float32Array {
-  var imageBufferData = image.data;
+  const imageBufferData = image.data;
 
   const stride = image.width * image.height;
   const float32Data = new Float32Array(3 * stride);
@@ -96,7 +96,7 @@ function ensureAbsoluteURL(url: string): string {
   if (isAbsoluteURL(url)) {
     return url;
   } else {
-    return new URL(url, window.location.href).href;
+    return new URL(url, self.location.href).href;
   }
 }
 
