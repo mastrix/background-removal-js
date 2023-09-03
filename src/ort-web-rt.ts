@@ -6,9 +6,26 @@ import { Tensor, Imports } from './tensor';
 import * as ort from 'onnxruntime-web';
 import * as Bundle from './bundle';
 
+// memo already loaded outside of create session this will ensure reuse
+let ortWasmSimdThreadedWasm: any = null;
+let ortWasmSimdWasm: any = null;
+let ortWasmThreadedWasm: any = null;
+let ortWasmWasm: any = null;
+
 function createOnnxRuntime(config: any): Imports {
   return {
     createSession: async (model: any) => {
+      console.log('ortWasmSimdThreadedWasm', ortWasmSimdThreadedWasm);
+      ortWasmSimdThreadedWasm =
+        ortWasmSimdThreadedWasm ||
+        (await Bundle.load('ort-wasm-simd-threaded.wasm', config));
+      ortWasmSimdWasm =
+        ortWasmSimdWasm || (await Bundle.load('ort-wasm-simd.wasm', config));
+      ortWasmThreadedWasm =
+        ortWasmThreadedWasm ||
+        (await Bundle.load('ort-wasm-threaded.wasm', config));
+      ortWasmWasm = ortWasmWasm || (await Bundle.load('ort-wasm.wasm', config));
+
       const capabilities = {
         simd: await simd(),
         threads: await threads(),
@@ -28,17 +45,11 @@ function createOnnxRuntime(config: any): Imports {
       ort.env.wasm.proxy = config.proxyToWorker;
       ort.env.wasm.wasmPaths = {
         'ort-wasm-simd-threaded.wasm': URL.createObjectURL(
-          await Bundle.load('ort-wasm-simd-threaded.wasm', config)
+          ortWasmSimdThreadedWasm
         ),
-        'ort-wasm-simd.wasm': URL.createObjectURL(
-          await Bundle.load('ort-wasm-simd.wasm', config)
-        ),
-        'ort-wasm-threaded.wasm': URL.createObjectURL(
-          await Bundle.load('ort-wasm-threaded.wasm', config)
-        ),
-        'ort-wasm.wasm': URL.createObjectURL(
-          await Bundle.load('ort-wasm.wasm', config)
-        )
+        'ort-wasm-simd.wasm': URL.createObjectURL(ortWasmSimdWasm),
+        'ort-wasm-threaded.wasm': URL.createObjectURL(ortWasmThreadedWasm),
+        'ort-wasm.wasm': URL.createObjectURL(ortWasmWasm)
       };
 
       if (config.debug) {
@@ -46,7 +57,7 @@ function createOnnxRuntime(config: any): Imports {
       }
 
       const ort_config: ort.InferenceSession.SessionOptions = {
-        executionProviders: ['wasm'],
+        executionProviders: ['cpu', 'wasm'],
         graphOptimizationLevel: 'all',
         executionMode: 'parallel',
         enableCpuMemArena: true

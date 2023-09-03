@@ -80,6 +80,17 @@ module.exports = (env, argv) => {
     }
   };
 
+  const workerConfig = {
+    ...commonConfig,
+    entry: './src/worker.ts',
+    target: 'webworker',
+    output: {
+      filename: 'worker.js',
+      path: path.resolve(__dirname, 'dist'),
+      publicPath: publicPath,
+    }
+  };
+
   const nodeConfig = {
     ...commonConfig,
     entry: './src/node.ts',
@@ -94,5 +105,5 @@ module.exports = (env, argv) => {
     }
   };
 
-  return [umdConfig, esmConfig];
+  return [umdConfig, esmConfig, workerConfig];
 };

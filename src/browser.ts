@@ -19,14 +19,14 @@ async function createSession(config: Config, imports: Imports) {
   const blob = await Bundle.load(model, config);
   const arrayBuffer = await blob.arrayBuffer();
   const session = await imports.createSession(arrayBuffer);
-  return session;
+  return { session, modelData: arrayBuffer };
 }
 
 async function _init(config?: Config) {
   config = validateConfig(config);
   const imports = createOnnxRuntime(config);
-  const session = await createSession(config, imports);
-  return { config, imports, session };
+  const { session, modelData } = await createSession(config, imports);
+  return { config, imports, session, modelData };
 }
 
 const init = memoize(_init, (config) => JSON.stringify(config));
@@ -37,10 +37,11 @@ interface configData {
   session: any;
 }
 
-async function removeBackground(
+async function removeBackgroundInternal(
   image: ImageSource,
-  configuration: configData,
+  configuration: configData
 ): Promise<Blob | object> {
+  console.log('removeBackgroundInternal', configuration);
   const {
     config = {
       debug: false,
@@ -84,11 +85,15 @@ async function removeBackground(
   return await utils.imageEncode(imageData);
 }
 
-const InitBackgroundRemoval = class BackgroundRemoval {
-  controller: any = null;
+class BackgroundRemoval {
+  controller: any = undefined;
   imglyProcessor: configData | null = null;
   config: Config | null = null;
   loaded: boolean = false;
+  session: any = null;
+  imports: Imports | null = null;
+  modelData: any = null;
+  imageToProcess: any = null;
 
   constructor(config: Config | null) {
     this.config = config;
@@ -99,28 +104,58 @@ const InitBackgroundRemoval = class BackgroundRemoval {
 
   private async loadModel(): Promise<any> {
     if (this.config?.debug) {
-      console.debug('Preloading model...');
+      console.debug('Preloading model with config:', this.config);
     }
+    // @ts-ignore
+    const { imports, session, config, modelData } = await init(this.config);
+    this.session = session;
+    this.imports = imports;
+    this.modelData = modelData;
+    this.imglyProcessor = {
+      imports: this.imports,
+      session: this.session,
+      config
+    };
+
     this.loaded = true;
-    this.imglyProcessor = await init(this.config || undefined);
     return this.imglyProcessor;
   }
 
   async warmpUp() {
     await this.loadModel();
     return;
-  };
+  }
 
   async removeBackground(image: string): Promise<Blob | object | void> {
+    console.log('Going to remove background loading state is: ', this.loaded);
     if (!this.loaded) {
-      const imglyProcessor = await this.loadModel();
-      this.controller = new AbortController();
-      const { signal } = this.controller;
-      console.log('signal', signal);
-      const result = await removeBackground(image, imglyProcessor);
-      this.controller = null;
-      return result;
+      await this.loadModel();
     }
+    if (this.session && this.imageToProcess) {
+      // @ts-ignore
+      this.session = await this.imports.createSession(this.modelData);
+      return {
+        aborted: true,
+        message: 'Session was aborted, new session created'
+      };
+    }
+
+    this.imageToProcess = image;
+
+    if (this) this.controller = new AbortController();
+    const { signal } = this.controller;
+    console.log('signal', signal);
+    console.log('imglyProcessor', this.imglyProcessor);
+
+    console.log('executing remove background');
+    // @ts-ignore
+    const result = await removeBackgroundInternal(
+      image,
+      // @ts-ignore
+      this.config
+    );
+    this.controller = null;
+    return result;
   }
 
   cancelBackgroundRemoval(): void {
@@ -131,4 +166,4 @@ const InitBackgroundRemoval = class BackgroundRemoval {
   }
 }
 
-export default InitBackgroundRemoval;
+export default BackgroundRemoval;
