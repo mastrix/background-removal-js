@@ -15,7 +15,6 @@ let ortWasmWasm: any = null;
 function createOnnxRuntime(config: any): Imports {
   return {
     createSession: async (model: any) => {
-      console.log('ortWasmSimdThreadedWasm', ortWasmSimdThreadedWasm);
       ortWasmSimdThreadedWasm =
         ortWasmSimdThreadedWasm ||
         (await Bundle.load('ort-wasm-simd-threaded.wasm', config));
@@ -30,10 +29,11 @@ function createOnnxRuntime(config: any): Imports {
         simd: await simd(),
         threads: await threads(),
         SharedArrayBuffer: typeof SharedArrayBuffer !== 'undefined',
-        numThreads: navigator.hardwareConcurrency ?? 4,
+        numThreads: self.crossOriginIsolated ? navigator.hardwareConcurrency / 2 : 1,
         // @ts-ignore
         webgpu: navigator.gpu !== undefined
       };
+
       if (config.debug) {
         console.debug('Capabilities:', capabilities);
         ort.env.debug = true;
@@ -60,7 +60,16 @@ function createOnnxRuntime(config: any): Imports {
         executionProviders: ['cpu', 'wasm'],
         graphOptimizationLevel: 'all',
         executionMode: 'parallel',
-        enableCpuMemArena: true
+        enableCpuMemArena: true,
+        enableMemPattern: false,
+        extra: {
+          session: {
+            disable_prepacking: "0",
+            use_device_allocator_for_initializers: "1",
+            use_ort_model_bytes_directly: "1",
+            use_ort_model_bytes_for_initializers: "1",
+          },
+        },
       };
 
       const session = await ort.InferenceSession.create(
@@ -94,7 +103,8 @@ function createOnnxRuntime(config: any): Imports {
           tensor.shape
         );
       }
-      const outputData = await session.run(feeds, {});
+
+      const outputData = await session.run(feeds);
       const outputKVPairs: Tensor[] = [];
 
       for (const key of outputs) {

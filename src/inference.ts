@@ -6,6 +6,10 @@ import {
 import { Imports } from './tensor';
 import { Config } from './schema';
 
+interface CancelInterference {
+  message: 'Cancelled, new request in process';
+}
+
 export async function runInference(
   imageData: ImageData,
   config: Config,
@@ -38,15 +42,24 @@ export async function runInference(
     tensorImage.data[i + 3] = alpha * 255;
   }
 
-  const [width, height] = calculateProportionalSize(
-    imageData.width,
-    imageData.height,
-    resolution,
-    resolution
-  );
+  let width = imageData.width;
+  let height = imageData.height;
+  let dst_width = imageData.width;
+  let dst_height = imageData.height;
 
-  const dst_width = Math.min(width, src_width);
-  const dst_height = Math.min(height, src_height);
+  if (imageData.width !== resolution || imageData.height !== resolution) {
+    const [calculatedWidth, calculatedheight] = calculateProportionalSize(
+      imageData.width,
+      imageData.height,
+      resolution,
+      resolution
+    );
+    width = calculatedWidth;
+    height = calculatedheight;
+
+    dst_width = Math.min(width, src_width);
+    dst_height = Math.min(height, src_height);
+  }
 
   tensorImage = await imageDataResize(tensorImage, dst_width, dst_height);
   if (config.progress) config.progress('compute:inference', 1, 1);

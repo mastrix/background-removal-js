@@ -41,7 +41,6 @@ async function removeBackgroundInternal(
   image: ImageSource,
   configuration: configData
 ): Promise<Blob | object> {
-  console.log('removeBackgroundInternal', configuration);
   const {
     config = {
       debug: false,
@@ -54,9 +53,6 @@ async function removeBackgroundInternal(
     imports,
     session
   } = configuration;
-
-  console.log('imports', imports);
-  console.log('session', session);
 
   if (config?.debug) {
     config.progress =
@@ -86,7 +82,6 @@ async function removeBackgroundInternal(
 }
 
 class BackgroundRemoval {
-  controller: any = undefined;
   imglyProcessor: configData | null = null;
   config: Config | null = null;
   loaded: boolean = false;
@@ -97,7 +92,6 @@ class BackgroundRemoval {
 
   constructor(config: Config | null) {
     this.config = config;
-    this.controller = null || new AbortController();
     this.imglyProcessor = null;
     this.loaded = false;
   }
@@ -137,23 +131,13 @@ class BackgroundRemoval {
 
     this.imageToProcess = image;
 
-    if (this) this.controller = new AbortController();
-    const { signal } = this.controller;
     // @ts-ignore
     const result = await removeBackgroundInternal(
       image,
       // @ts-ignore
       this.imglyProcessor
     );
-    this.controller = null;
     return result;
-  }
-
-  cancelBackgroundRemoval(): void {
-    if (this.controller) {
-      this.controller.abort();
-      this.controller = null;
-    }
   }
 }
 

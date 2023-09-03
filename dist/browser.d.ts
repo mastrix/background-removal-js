@@ -8,7 +8,6 @@ interface configData {
     session: any;
 }
 declare class BackgroundRemoval {
-    controller: any;
     imglyProcessor: configData | null;
     config: Config | null;
     loaded: boolean;
@@ -20,6 +19,5 @@ declare class BackgroundRemoval {
     private loadModel;
     warmpUp(): Promise<void>;
     removeBackground(image: string): Promise<Blob | object | void>;
-    cancelBackgroundRemoval(): void;
 }
 export default BackgroundRemoval;
