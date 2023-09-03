@@ -57,19 +57,9 @@ function createOnnxRuntime(config: any): Imports {
       }
 
       const ort_config: ort.InferenceSession.SessionOptions = {
-        executionProviders: ['cpu', 'wasm'],
+        executionProviders: ['wasm'],
         graphOptimizationLevel: 'all',
         executionMode: 'parallel',
-        enableCpuMemArena: true,
-        enableMemPattern: false,
-        extra: {
-          session: {
-            disable_prepacking: "0",
-            use_device_allocator_for_initializers: "1",
-            use_ort_model_bytes_directly: "1",
-            use_ort_model_bytes_for_initializers: "1",
-          },
-        },
       };
 
       const session = await ort.InferenceSession.create(
