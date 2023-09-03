@@ -127,27 +127,18 @@ class BackgroundRemoval {
   }
 
   async removeBackground(image: string): Promise<Blob | object | void> {
-    console.log('Going to remove background loading state is: ', this.loaded);
     if (!this.loaded) {
       await this.loadModel();
     }
     if (this.session && this.imageToProcess) {
       // @ts-ignore
       this.session = await this.imports.createSession(this.modelData);
-      return {
-        aborted: true,
-        message: 'Session was aborted, new session created'
-      };
     }
 
     this.imageToProcess = image;
 
     if (this) this.controller = new AbortController();
     const { signal } = this.controller;
-    console.log('signal', signal);
-    console.log('imglyProcessor', this.imglyProcessor);
-
-    console.log('executing remove background');
     // @ts-ignore
     const result = await removeBackgroundInternal(
       image,
