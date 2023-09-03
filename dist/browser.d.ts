@@ -8,7 +8,7 @@ interface configData {
     session: any;
 }
 declare class BackgroundRemoval {
-    controller: AbortController | null;
+    controller: any;
     imglyProcessor: configData | null;
     config: Config | null;
     loaded: boolean;
