@@ -152,7 +152,7 @@ class BackgroundRemoval {
     const result = await removeBackgroundInternal(
       image,
       // @ts-ignore
-      this.config
+      this.imglyProcessor
     );
     this.controller = null;
     return result;

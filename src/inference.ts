@@ -1,4 +1,8 @@
-import { imageDataResize, imageDataToFloat32Array, calculateProportionalSize } from './utils';
+import {
+  imageDataResize,
+  imageDataToFloat32Array,
+  calculateProportionalSize
+} from './utils';
 import { Imports } from './tensor';
 import { Config } from './schema';
 
@@ -16,6 +20,8 @@ export async function runInference(
   const dims = [1, 3, resolution, resolution];
   let tensorImage = await imageDataResize(imageData, resolution, resolution);
   const inputTensorData = imageDataToFloat32Array(tensorImage);
+  
+  if (!imports || !session) tensorImage;
 
   const predictionsDict = await imports.runSession(
     session,
