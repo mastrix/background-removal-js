@@ -16,10 +16,7 @@ let ortWasmWasm: any = null;
 function createOnnxRuntime(config: any): Imports {
   return {
     createSession: async (model: any) => {
-      // @ts-ignore
-      if (typeof model !== ArrayBuffer) {
-        model = await modelToBuffer(config);
-      }
+      let sessionModel = await modelToBuffer(config);
 
       ortWasmSimdThreadedWasm =
         ortWasmSimdThreadedWasm ||
@@ -69,7 +66,7 @@ function createOnnxRuntime(config: any): Imports {
       };
 
       const session = await ort.InferenceSession.create(
-        model,
+        sessionModel,
         ort_config
       ).catch((e: any) => {
         throw new Error(

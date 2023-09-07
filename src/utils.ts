@@ -126,25 +126,10 @@ async function imageSourceToImageData(
   return image as ImageData;
 }
 
-
-export let modelData:{
-  name: string | null,
-  model: ArrayBuffer | null
-} = {
-  name: null,
-  model: null
-};
-
 export const modelToBuffer = async (config: Config) => {
-  if(modelData.name !== config.model) {
-    const model = config.model;
-    const blob = await Bundle.load(model, config);
-    const arrayBuffer = await blob.arrayBuffer();
-    modelData = {
-      name: 'medium',
-      model: cloneDeep(arrayBuffer)
-    };
-    return arrayBuffer;
-  }
+  const model = config.model;
+  const blob = await Bundle.load(model, config);
+  const arrayBuffer = await blob.arrayBuffer();
+  return cloneDeep(arrayBuffer);
 };
 

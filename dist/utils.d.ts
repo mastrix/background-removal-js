@@ -9,8 +9,4 @@ declare function calculateProportionalSize(originalWidth: number, originalHeight
 declare function isAbsoluteURL(url: string): boolean;
 declare function ensureAbsoluteURL(url: string): string;
 declare function imageSourceToImageData(image: string | URL | ArrayBuffer | ImageData | Blob | Uint8Array): Promise<ImageData>;
-export declare let modelData: {
-    name: string | null;
-    model: ArrayBuffer | null;
-};
 export declare const modelToBuffer: (config: Config) => Promise<any>;

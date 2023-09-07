@@ -102,7 +102,7 @@ class BackgroundRemoval {
     const { imports, session, config } = await init(this.config);
     this.session = session;
     this.imports = imports;
-    this.modelData = utils.modelData.model;
+    // this.modelData = utils.modelData.model;
     this.imglyProcessor = {
       imports: this.imports,
       session: this.session,
@@ -124,7 +124,10 @@ class BackgroundRemoval {
     }
     if (this.session && this.imageToProcess) {
       // @ts-ignore
-      this.session = await this.imports.createSession(modelData.model);
+      const modelData = await utils.modelToBuffer(this.config);
+
+      // @ts-ignore
+      this.session = await this.imports.createSession(modelData);
     }
 
     this.imageToProcess = image;
