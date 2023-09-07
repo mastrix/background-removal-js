@@ -10,23 +10,43 @@ import * as Bundle from './bundle';
 import { Imports } from './tensor';
 
 import memoize from 'lodash/memoize';
+import cloneDeep from 'lodash/cloneDeep';
 
 type ImageSource = ImageData | ArrayBuffer | Uint8Array | Blob | URL | string;
 
+let modelData:{
+  name: string | null,
+  model: ArrayBuffer | null
+} = {
+  name: null,
+  model: null
+};
+
+const modelToBuffer = async (config: Config) => {
+  if(modelData.name !== config.model) {
+    const model = config.model;
+    const blob = await Bundle.load(model, config);
+    const arrayBuffer = await blob.arrayBuffer();
+    modelData = {
+      name: 'medium',
+      model: cloneDeep(arrayBuffer)
+    };
+    return arrayBuffer;
+  }
+};
+
 async function createSession(config: Config, imports: Imports) {
   if (config.debug) console.debug('Loading model...');
-  const model = config.model;
-  const blob = await Bundle.load(model, config);
-  const arrayBuffer = await blob.arrayBuffer();
+  const arrayBuffer = await modelToBuffer(config);
   const session = await imports.createSession(arrayBuffer);
-  return { session, modelData: arrayBuffer };
+  return session;
 }
 
 async function _init(config?: Config) {
   config = validateConfig(config);
   const imports = createOnnxRuntime(config);
-  const { session, modelData } = await createSession(config, imports);
-  return { config, imports, session, modelData };
+  const session = await createSession(config, imports);
+  return { config, imports, session };
 }
 
 const init = memoize(_init, (config) => JSON.stringify(config));
@@ -101,10 +121,10 @@ class BackgroundRemoval {
       console.debug('Preloading model with config:', this.config);
     }
     // @ts-ignore
-    const { imports, session, config, modelData } = await init(this.config);
+    const { imports, session, config } = await init(this.config);
     this.session = session;
     this.imports = imports;
-    this.modelData = modelData;
+    this.modelData = modelData.model;
     this.imglyProcessor = {
       imports: this.imports,
       session: this.session,
