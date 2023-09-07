@@ -6,38 +6,16 @@ import { runInference } from './inference';
 import { Config, validateConfig } from './schema';
 import { createOnnxRuntime } from './ort-web-rt';
 import * as utils from './utils';
-import * as Bundle from './bundle';
 import { Imports } from './tensor';
 
 import memoize from 'lodash/memoize';
-import cloneDeep from 'lodash/cloneDeep';
 
 type ImageSource = ImageData | ArrayBuffer | Uint8Array | Blob | URL | string;
 
-let modelData:{
-  name: string | null,
-  model: ArrayBuffer | null
-} = {
-  name: null,
-  model: null
-};
-
-const modelToBuffer = async (config: Config) => {
-  if(modelData.name !== config.model) {
-    const model = config.model;
-    const blob = await Bundle.load(model, config);
-    const arrayBuffer = await blob.arrayBuffer();
-    modelData = {
-      name: 'medium',
-      model: cloneDeep(arrayBuffer)
-    };
-    return arrayBuffer;
-  }
-};
 
 async function createSession(config: Config, imports: Imports) {
   if (config.debug) console.debug('Loading model...');
-  const arrayBuffer = await modelToBuffer(config);
+  const arrayBuffer = await utils.modelToBuffer(config);
   const session = await imports.createSession(arrayBuffer);
   return session;
 }
@@ -124,7 +102,7 @@ class BackgroundRemoval {
     const { imports, session, config } = await init(this.config);
     this.session = session;
     this.imports = imports;
-    this.modelData = modelData.model;
+    this.modelData = utils.modelData.model;
     this.imglyProcessor = {
       imports: this.imports,
       session: this.session,
@@ -146,7 +124,7 @@ class BackgroundRemoval {
     }
     if (this.session && this.imageToProcess) {
       // @ts-ignore
-      this.session = await this.imports.createSession(this.modelData);
+      this.session = await this.imports.createSession(modelData.model);
     }
 
     this.imageToProcess = image;

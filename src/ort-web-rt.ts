@@ -5,6 +5,7 @@ import { Tensor, Imports } from './tensor';
 
 import * as ort from 'onnxruntime-web';
 import * as Bundle from './bundle';
+import { modelToBuffer } from './utils';
 
 // memo already loaded outside of create session this will ensure reuse
 let ortWasmSimdThreadedWasm: any = null;
@@ -15,6 +16,11 @@ let ortWasmWasm: any = null;
 function createOnnxRuntime(config: any): Imports {
   return {
     createSession: async (model: any) => {
+      // @ts-ignore
+      if (typeof model !== ArrayBuffer) {
+        model = await modelToBuffer(config);
+      }
+
       ortWasmSimdThreadedWasm =
         ortWasmSimdThreadedWasm ||
         (await Bundle.load('ort-wasm-simd-threaded.wasm', config));
